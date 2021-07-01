@@ -1,4 +1,4 @@
-# sslcertzoneedit-
+# sslcertzoneedit
 
 Plugin to create and automatically update let's encrypt ssl certificates via [zoneedit](https://www.zoneedit.com/) dns, acme.sh script and optionally in pfsense.
 
@@ -15,16 +15,16 @@ This is built on information given in the zoneedit forum by Brad C. I qoute
 There are two different installation methods one for an ordinray bash / sh installaiotn and one into [pfsense](https://www.pfsense.org/download/)
 
 ## Installation
-Install [acme.sh](https://github.com/acmesh-official/acme.sh) 
+Install [acme.sh](https://github.com/acmesh-official/acme.sh)
 
 Place the dns_zoneedit.sh file in the .../acme/dnsapi/ folder.
-Give execution rights to the dns_zoneedit.sh file, e.g. 
+Give execution rights to the dns_zoneedit.sh file, e.g.
 ```
 chmod +x .../acme/dnsapi/dns_zoneeidt.sh
 ```
 
 ### Usage:
-First read [How to use DNS AP](https://github.com/acmesh-official/acme.sh/wiki/dnsapi) 
+First read [How to use DNS AP](https://github.com/acmesh-official/acme.sh/wiki/dnsapi)
 
 Before first execution define the following in sh (or bash):
 ```
@@ -39,7 +39,7 @@ acme.sh --issue --dns dns_zoneedit -d example.com -d www.example.com
 
 ## Pfsense installation
 Install the acme package. Then place the Place the dns_zoneedit.sh file in the .../acme/dnsapi/. folder.
-Give execution rights to the dns_zoneedit.sh file, e.g. 
+Give execution rights to the dns_zoneedit.sh file, e.g.
 ```
 chmod +x .../acme/dnsapi/dns_zoneedit.sh
 ```
@@ -74,4 +74,3 @@ There is no endpoint to remove the challenge(s). Thus one have to remove the cha
 ## Improvements
 * Replace the usage of the get method to post inorder to get better protection of id and token.
 * Provide diff file and a script to update the acme.inc file in pfsense
-
