@@ -128,7 +128,7 @@ _get_root() {
 
   # Get the root domain
   ndots=$(echo $fulldomain | tr -dc '.' | wc -c)
-  if [ "$ndots" < "2" ]; then
+  if [ "$ndots" -lt "2" ]; then
       # invalid fulldomain
       _err "Invalid fulldomain"
       return 1
