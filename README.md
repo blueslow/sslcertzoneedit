@@ -12,7 +12,7 @@ This is built on information given in the zoneedit forum by Brad C. I qoute
 >```
 >[Zoneedit forum](https://forum.zoneedit.com/index.php?threads/automating-changes-of-txt-records-in-dns.7394/post-19772)
 
-There are two different installation methods one for an ordinray bash / sh installaiotn and one into [pfsense](https://www.pfsense.org/download/)
+There are two different installation methods one for an ordinray bash / sh installation and one into [pfsense](https://www.pfsense.org/download/)
 
 ## Installation
 Install [acme.sh](https://github.com/acmesh-official/acme.sh)
