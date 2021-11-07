@@ -99,6 +99,10 @@ dns_zoneedit_rm() {
   _debug _sub_domain "$_sub_domain"
   _debug _domain "$_domain"
 
+  # TODO: ZoneEdit does not implement delete yet but applications,
+  # such as pfsense, require a successful return code to update the cert.
+  _info "Delete txt record not implemented yet"
+  return 0
   # if _zoneedit_api "DELETE" "$fulldomain" "$txtvalue"; then
   #   if printf -- "%s" "$response" | grep "OK." >/dev/null; then
   #     _info "Deleted, OK"
@@ -108,7 +112,6 @@ dns_zoneedit_rm() {
   #     return 1
   #   fi
   # fi
-  _info "Delete txt record not implemented yet"
 
   return 1
 }
