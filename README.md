@@ -22,6 +22,20 @@ Give execution rights to the dns_zoneedit.sh file, e.g.
 ```
 chmod +x .../acme/dnsapi/dns_zoneedit.sh
 ```
+Update the .../acme/acme.inc with:
+```
+$acme_domain_validation_method['dns_zoneedit'] = array('name' => "DNS-Zoneedit",
+        'fields' => array(
+                'ZONEEDIT_ID' => array('name' => "zoneedit_id", 'columnheader' => "ID", 'type' => "textbox",
+                        'description' => "ZONEEDIT ID"
+                ),
+                'ZONEEDIT_Token' => array('name' => "zoneedit_token", 'columnheader' => "Token", 'type' => "textbox",
+                        'description' => "ZONEEDIT Token"
+                        )
+        ));
+```
+just before //TODO add more challenge validation types
+
 
 ### Usage:
 First read [How to use DNS AP](https://github.com/acmesh-official/acme.sh/wiki/dnsapi)
@@ -38,13 +52,13 @@ acme.sh --issue --dns dns_zoneedit -d example.com -d www.example.com
 ```
 
 ## Pfsense installation
-Install the acme package. Then place the Place the dns_zoneedit.sh file in the .../acme/dnsapi/. folder.
+Install the acme package. Then place the Place the dns_zoneedit.sh file in the /usr/local/pkg/acme/dnsapi/. folder. 
 Give execution rights to the dns_zoneedit.sh file, e.g.
 ```
-chmod +x .../acme/dnsapi/dns_zoneedit.sh
+chmod +x /usr/local/pkg/acme/dnsapi/dns_zoneedit.sh
 ```
 
-Update the .../acme/acme.inc with:
+Update the /usr/local/pkg/acme/acme.inc with:
 ```
 $acme_domain_validation_method['dns_zoneedit'] = array('name' => "DNS-Zoneedit",
         'fields' => array(
@@ -59,12 +73,12 @@ $acme_domain_validation_method['dns_zoneedit'] = array('name' => "DNS-Zoneedit",
 just before //TODO add more challenge validation types
 
 ### Pfsense usage:
-Use the pfsense webgui for acme certifictes select method DNS-Zoneedit. Enter ID and token.
+Use the pfsense webgui for acme certificates select method DNS-Zoneedit. Enter ID and token.
 
 ## Limitations
 There is no endpoint to remove the challenge(s). Thus one have to remove the challenges from time to time.
 When acme is updated acme.inc is overwritten, thus it has to be updated with acme_domain_validation_method for
-dns_zone edit again. 
+dns_zoneedit again. 
 
 ## Improvements
 * Replace the usage of the get method to post inorder to get better protection of id and token.
