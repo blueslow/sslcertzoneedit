@@ -20,7 +20,7 @@ Install [acme.sh](https://github.com/acmesh-official/acme.sh)
 Place the dns_zoneedit.sh file in the .../acme/dnsapi/ folder.
 Give execution rights to the dns_zoneedit.sh file, e.g.
 ```
-chmod +x .../acme/dnsapi/dns_zoneeidt.sh
+chmod +x .../acme/dnsapi/dns_zoneedit.sh
 ```
 
 ### Usage:
@@ -63,6 +63,8 @@ Use the pfsense webgui for acme certifictes select method DNS-Zoneedit. Enter ID
 
 ## Limitations
 There is no endpoint to remove the challenge(s). Thus one have to remove the challenges from time to time.
+When acme is updated acme.inc is overwritten, thus it has to be updated with acme_domain_validation_method for
+dns_zone edit again. 
 
 ## Improvements
 * Replace the usage of the get method to post inorder to get better protection of id and token.
