@@ -14,7 +14,7 @@ This is built on information given in the zoneedit forum by Brad C. I qoute
 
 There are two different installation methods one for an ordinray bash / sh installation and one into [pfsense](https://www.pfsense.org/download/)
 
-## Installation
+## Standalone nstallation
 Install [acme.sh](https://github.com/acmesh-official/acme.sh)
 
 Place the dns_zoneedit.sh file in the .../acme/dnsapi/ folder.
@@ -22,20 +22,6 @@ Give execution rights to the dns_zoneedit.sh file, e.g.
 ```
 chmod +x .../acme/dnsapi/dns_zoneedit.sh
 ```
-Update the .../acme/acme.inc with:
-```
-$acme_domain_validation_method['dns_zoneedit'] = array('name' => "DNS-Zoneedit",
-        'fields' => array(
-                'ZONEEDIT_ID' => array('name' => "zoneedit_id", 'columnheader' => "ID", 'type' => "textbox",
-                        'description' => "ZONEEDIT ID"
-                ),
-                'ZONEEDIT_Token' => array('name' => "zoneedit_token", 'columnheader' => "Token", 'type' => "textbox",
-                        'description' => "ZONEEDIT Token"
-                        )
-        ));
-```
-just before //TODO add more challenge validation types
-
 
 ### Usage:
 First read [How to use DNS AP](https://github.com/acmesh-official/acme.sh/wiki/dnsapi)
