@@ -18,10 +18,13 @@
 
 # Example:
 # https://dynamic.zoneedit.com/txt-create.php?host=_acme-challenge.example.com&rdata=depE1VF_xshMm1IVY1Y56Kk9Zb_7jA2VFkP65WuNgu8W
-Zoneedit_API="https://dynamic.zoneedit.com/txt-create.php"
-Zoneedit_API_GET="https://%s:%s@dynamic.zoneedit.com/txt-create.php?host=%s&rdata=%s"
-
-
+####################
+####################
+# Move these defines into the add and rm subs below
+##Zoneedit_API="https://dynamic.zoneedit.com/txt-create.php"
+##Zoneedit_API_GET="https://%s:%s@dynamic.zoneedit.com/txt-create.php?host=%s&rdata=%s"
+####################
+####################
 #Usage: dns_zoneedit_add   _acme-challenge.www.domain.com   "XKrxpRBosdIKFzxW_CT3KLZNf6q0HG9i01zxXp5CPBs"
 dns_zoneedit_add() {
   fulldomain=$1
@@ -54,8 +57,14 @@ dns_zoneedit_add() {
 
   _debug _sub_domain "$_sub_domain"
   _debug _domain "$_domain"
-
-  if _zoneedit_api "GET" "$fulldomain" "$txtvalue"; then
+ #########################
+ #########################
+  #I don't know if you loop back to this with multiple domains so 
+  Zoneedit_API="https://dynamic.zoneedit.com/txt-create.php"
+  Zoneedit_API_GET="https://%s:%s@dynamic.zoneedit.com/txt-create.php?host=%s&rdata=%s"
+ #########################
+ #########################
+   if _zoneedit_api "GET" "$fulldomain" "$txtvalue"; then
     if printf -- "%s" "$response" | grep "OK." >/dev/null; then
       _info "Added, OK"
       return 0
@@ -101,17 +110,24 @@ dns_zoneedit_rm() {
 
   # TODO: ZoneEdit does not implement delete yet but applications,
   # such as pfsense, require a successful return code to update the cert.
-  _info "Delete txt record not implemented yet"
-  return 0
-  # if _zoneedit_api "DELETE" "$fulldomain" "$txtvalue"; then
-  #   if printf -- "%s" "$response" | grep "OK." >/dev/null; then
-  #     _info "Deleted, OK"
-  #     return 0
-  #   else
-  #     _err "Delete txt record error."
-  #     return 1
-  #   fi
-  # fi
+###  _info "Delete txt record not implemented yet"
+###  return 0
+#########################
+#########################
+# Note create changed to delete in url
+  Zoneedit_API="https://dynamic.zoneedit.com/txt-delete.php"
+  Zoneedit_API_GET="https://%s:%s@dynamic.zoneedit.com/txt-delete.php?host=%s&rdata=%s"
+#########################
+#########################
+    if _zoneedit_api "DELETE" "$fulldomain" "$txtvalue"; then
+     if printf -- "%s" "$response" | grep "OK." >/dev/null; then
+       _info "Deleted, OK"
+       return 0
+     else
+       _err "Delete txt record error."
+       return 1
+     fi
+   fi
 
   return 1
 }
