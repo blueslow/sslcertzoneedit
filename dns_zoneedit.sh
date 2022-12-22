@@ -77,7 +77,12 @@ dns_zoneedit_add() {
       return 1
     fi
   fi
-  _err "Add txt record error H2."
+  
+  if [ "${response%%TEXT*}" != '<SUCCESS CODE="200" ' ]; then
+    _err "error $domain $cmd $response"
+  fi
+
+  _err "Add txt record error H2?"
 
   return 1
 }
@@ -127,6 +132,10 @@ dns_zoneedit_rm() {
        return 1
      fi
    fi
+
+  if [ "${response%%TEXT*}" != '<SUCCESS CODE="200" ' ]; then
+    _err "error $domain $cmd $response"
+  fi
 
   return 1
 }
