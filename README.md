@@ -12,11 +12,14 @@ This is built on information given in the zoneedit forum by Brad C. I qoute
 >```
 >[Zoneedit forum](https://forum.zoneedit.com/index.php?threads/automating-changes-of-txt-records-in-dns.7394/post-19772)
 
-Credits to github user onley for adding txt-delete endpoint
+There is now an endpoint to remove the challenge(s).
+
+Credits to github user onley for adding support for the txt-delete endpoint.
+
 
 There are two different installation methods one for an ordinray bash / sh installation and one into [pfsense](https://www.pfsense.org/download/)
 
-## Standalone nstallation
+## Standalone installation
 Install [acme.sh](https://github.com/acmesh-official/acme.sh)
 
 Place the dns_zoneedit.sh file in the .../acme/dnsapi/ folder.
@@ -64,9 +67,6 @@ just before //TODO add more challenge validation types
 Use the pfsense webgui for acme certificates select method DNS-Zoneedit. Enter ID and token.
 
 ## Limitations
-There is now an endpoint to remove the challenge(s). However the script dns_zoneedit.sh is not fully tested, your milage may vary 
-
-
 In pfsense when acme pakage is updated acme.inc is overwritten, thus it has to be updated with acme_domain_validation_method for dns_zoneedit again. 
 
 ## Improvements
