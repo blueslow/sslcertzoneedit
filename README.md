@@ -63,6 +63,14 @@ $acme_domain_validation_method['dns_zoneedit'] = array('name' => "DNS-Zoneedit",
 ```
 just before //TODO add more challenge validation types
 
+or use patch e.g:
+```
+cd /usr/local/pkg/acme
+patch -b acme.inc < acme_zoneedit_inc.patch
+```
+The option b creates a backup file (acme.inc.orig) of acme.inc before patch is applied 
+
+
 ### Pfsense usage:
 Use the pfsense webgui for acme certificates select method DNS-Zoneedit. Enter ID and token.
 
