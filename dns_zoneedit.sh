@@ -207,7 +207,11 @@ _zoneedit_api() {
     _err "error $domain $response"
     return 1
   fi
-  # The succes test can be more extensive
+  if [ "${response%%TEXT*}" != '<SUCCESS CODE="200" ' ]; then
+    _err "error $domain $cmd $response"
+    return 1
+  fi
+# The succes test can be more extensive
   # but the below is susfficient
   response="OK."
 
