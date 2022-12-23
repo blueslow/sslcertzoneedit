@@ -77,6 +77,10 @@ dns_zoneedit_add() {
       return 1
     fi
   fi
+  
+  if [ "${response%%TEXT*}" != '<SUCCESS CODE="200" ' ]; then
+    _err "error $domain $cmd $response"
+  fi
 
   _err "Add txt record error H2?"
 
@@ -129,6 +133,10 @@ dns_zoneedit_rm() {
      fi
    fi
 
+  if [ "${response%%TEXT*}" != '<SUCCESS CODE="200" ' ]; then
+    _err "error $domain $cmd $response"
+  fi
+
   return 1
 }
 
@@ -169,7 +177,6 @@ _get_root() {
     _err "Get root: $_sub_domain"
     return 1
   fi
-
   # _info "end get root d:$_domain , s:$_sub_domain"
   return 0
 }
@@ -200,12 +207,8 @@ _zoneedit_api() {
     _err "error $domain $response"
     return 1
   fi
-  if [ "${response%%TEXT*}" != '<SUCCESS CODE="200" ' ]; then
-    _err "error $domain $cmd $response"
-    return 1
-  fi
   # The succes test can be more extensive
-  # but the below is sufficient
+  # but the below is susfficient
   response="OK."
 
   return 0
