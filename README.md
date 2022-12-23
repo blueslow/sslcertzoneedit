@@ -43,7 +43,8 @@ acme.sh --issue --dns dns_zoneedit -d example.com -d www.example.com
 ```
 
 ## Pfsense installation
-Install the acme package. Then place the Place the dns_zoneedit.sh f and optionally acme_zoneedit_inc.patch ile in the /usr/local/pkg/acme/dnsapi/. folder. 
+Install the acme package. Place the dns_zoneedit.sh file into the /usr/local/pkg/acme/dnsapi/ folder.
+Then place the acme_zoneedit_inc.patch into the /usr/local/pkg/acme/ folder.
 Give execution rights to the dns_zoneedit.sh file, e.g.
 ```
 chmod +x /usr/local/pkg/acme/dnsapi/dns_zoneedit.sh
