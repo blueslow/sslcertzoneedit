@@ -43,13 +43,21 @@ acme.sh --issue --dns dns_zoneedit -d example.com -d www.example.com
 ```
 
 ## Pfsense installation
-Install the acme package. Then place the Place the dns_zoneedit.sh file in the /usr/local/pkg/acme/dnsapi/. folder. 
+Install the acme package. Then place the Place the dns_zoneedit.sh f and optionally acme_zoneedit_inc.patch ile in the /usr/local/pkg/acme/dnsapi/. folder. 
 Give execution rights to the dns_zoneedit.sh file, e.g.
 ```
 chmod +x /usr/local/pkg/acme/dnsapi/dns_zoneedit.sh
 ```
 
-Update the /usr/local/pkg/acme/acme.inc with:
+Update acme.inc by using useing patch e.g:
+```
+cd /usr/local/pkg/acme
+patch -b acme.inc < acme_zoneedit_inc.patch
+```
+The option b creates a backup file (acme.inc.orig) of acme.inc before patch is applied 
+
+
+or edit the /usr/local/pkg/acme/acme.inc with (if patching fails):
 ```
 $acme_domain_validation_method['dns_zoneedit'] = array('name' => "DNS-Zoneedit",
         'fields' => array(
@@ -63,12 +71,6 @@ $acme_domain_validation_method['dns_zoneedit'] = array('name' => "DNS-Zoneedit",
 ```
 just before //TODO add more challenge validation types
 
-or use patch e.g:
-```
-cd /usr/local/pkg/acme
-patch -b acme.inc < acme_zoneedit_inc.patch
-```
-The option b creates a backup file (acme.inc.orig) of acme.inc before patch is applied 
 
 
 ### Pfsense usage:
