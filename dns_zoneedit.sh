@@ -68,7 +68,7 @@ dns_zoneedit_add() {
   Zoneedit_API="https://dynamic.zoneedit.com/txt-create.php"
   Zoneedit_API_GET="https://%s:%s@dynamic.zoneedit.com/txt-create.php?host=%s&rdata=%s"
  
-  if _zoneedit_api "GET" "$fulldomain" "$txtvalue"; then
+  if _zoneedit_api "ADD" "$fulldomain" "$txtvalue"; then
     if printf -- "%s" "$response" | grep "OK." >/dev/null; then
       _info "Added, OK"
       return 0
