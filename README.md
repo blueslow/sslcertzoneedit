@@ -82,4 +82,10 @@ In pfsense when acme pakage is updated acme.inc is overwritten, thus it has to b
 
 ## Improvements
 * Replace the usage of the get method to post inorder to get better protection of id and token.
-* Provide diff file and a script to update the acme.inc file in pfsense
+  - Implemented 22-12-27
+* Provide diff file and a script to update the acme.inc file in pfsense. 
+  - Implemented 22-12-27
+
+## Known issues
+* It has been reported that dns_zoneedit_rm  reporte in false positives in some cases.
+
