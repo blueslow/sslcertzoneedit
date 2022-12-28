@@ -1,29 +1,38 @@
 #!/usr/bin/env sh
 
-#Here is a smaple custom api script.
-#This file name is "dns_zoneedit.sh"
-#So, here must be a method  dns_zoneedit_add()
-#Which will be called by acme.sh to add the txt record to your api system.
-#returns 0 means success, otherwise error.
-#
-#Author: Neilpang
-#Report Bugs here: https://github.com/acmesh-official/acme.sh
-#
-########  Public functions #####################
+# https://github.com/blueslow/sslcertzoneedit
 
-# Please Read this guide first: https://github.com/acmesh-official/acme.sh/wiki/DNS-API-Dev-Guide
+# Only need to export the credentials once, acme.sh will save for automatic renewal.
+# export ZONEEDIT_ID="Your id"
+# export ZONEEDIT_Token="Your token"
+# acme.sh --issue --dns dns_zoneedit -d example.com -d www.example.com
 
-#ZONEEDIT_Token
-#ZONEEDIT_ID
-
-# Examples:
+# ZoneEdit HTTP API
 # https://dynamic.zoneedit.com/txt-create.php?host=_acme-challenge.example.com&rdata=depE1VF_xshMm1IVY1Y56Kk9Zb_7jA2VFkP65WuNgu8W
 # https://dynamic.zoneedit.com/txt-delete.php?host=_acme-challenge.example.com&rdata=depE1VF_xshMm1IVY1Y56Kk9Zb_7jA2VFkP65WuNgu8W
-
 Zoneedit_API_Create="https://dynamic.zoneedit.com/txt-create.php?host=%s&rdata=%s"
 Zoneedit_API_Delete="https://dynamic.zoneedit.com/txt-delete.php?host=%s&rdata=%s"
 
 # Applications, such as pfsense, require a successful return code to update the cert.
+
+# Notes/To Do (!remove me before merge!)
+# * _get_root() is not needed to work with ZoneEdit's API, so it can probably be removed.
+# * Fix wildcard timeout, min 10 seconds between same-name TXT record creation OR deletion (well it only takes one request to delete both, haven't got far enough to see what acme.sh does at that stage)
+# * Show method used (CREATE/DELETE) in log
+# * Logging cleanup
+# * Test
+#   - dom.tld
+#   - sub.dom.tld
+#   - dom.tld dom2.tld
+#   - dom.tld sub.dom.tld
+#   - dom.tld *.dom.tld (wildcard domain)
+#   - sub.dom.tld *.sub.dom.tld (wildcard domain)
+# * https://github.com/acmesh-official/acme.sh/issues/1261
+# * https://github.com/acmesh-official/acme.sh/wiki/DNS-alias-mode
+#
+# Please take care that the rm function and add function are called in 2 different isolated subshells. So, you can not pass any env vars from the add function to the rm function. You must re-do all the preparations of the add function here too.
+
+########  Public functions #####################
 
 #Usage: dns_zoneedit_add   _acme-challenge.www.domain.com   "XKrxpRBosdIKFzxW_CT3KLZNf6q0HG9i01zxXp5CPBs"
 dns_zoneedit_add() {
@@ -158,6 +167,7 @@ _get_root() {
   return 0
 }
 
+#Usage: _zoneedit_api <CREATE|DELETE> <full domain> <rdata>
 _zoneedit_api() {
   cmd=$1		# CREATE | DELETE
   domain=$2
