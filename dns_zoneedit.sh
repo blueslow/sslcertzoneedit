@@ -19,6 +19,7 @@ Zoneedit_API_Delete="https://dynamic.zoneedit.com/txt-delete.php?host=%s&rdata=%
 # * _get_root() is not needed to work with ZoneEdit's API, so it can probably be removed.
 # * Fix wildcard timeout, min 10 seconds between same-name TXT record creation OR deletion (well it only takes one request to delete both, haven't got far enough to see what acme.sh does at that stage)
 # * Show method used (CREATE/DELETE) in log
+# * Credentials not actually hidden???
 # * Logging cleanup
 # * Test
 #   - dom.tld
@@ -29,6 +30,8 @@ Zoneedit_API_Delete="https://dynamic.zoneedit.com/txt-delete.php?host=%s&rdata=%
 #   - sub.dom.tld *.sub.dom.tld (wildcard domain)
 # * https://github.com/acmesh-official/acme.sh/issues/1261
 # * https://github.com/acmesh-official/acme.sh/wiki/DNS-alias-mode
+#
+# https://github.com/acmesh-official/acme.sh/wiki/DNS-API-Dev-Guide
 #
 # Please take care that the rm function and add function are called in 2 different isolated subshells. So, you can not pass any env vars from the add function to the rm function. You must re-do all the preparations of the add function here too.
 
