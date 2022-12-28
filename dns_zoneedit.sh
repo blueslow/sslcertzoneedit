@@ -16,19 +16,14 @@
 #ZONEEDIT_Token
 #ZONEEDIT_ID
 
-# Example:
+# Examples:
 # https://dynamic.zoneedit.com/txt-create.php?host=_acme-challenge.example.com&rdata=depE1VF_xshMm1IVY1Y56Kk9Zb_7jA2VFkP65WuNgu8W
+# https://dynamic.zoneedit.com/txt-delete.php?host=_acme-challenge.example.com&rdata=depE1VF_xshMm1IVY1Y56Kk9Zb_7jA2VFkP65WuNgu8W
 
+Zoneedit_API_Create="https://dynamic.zoneedit.com/txt-create.php?host=%s&rdata=%s"
+Zoneedit_API_Delete="https://dynamic.zoneedit.com/txt-delete.php?host=%s&rdata=%s"
 
-#
-# Moved these defines into the add subroutine below
-# Zoneedit_API="https://dynamic.zoneedit.com/txt-create.php"
-# Zoneedit_API_GET="https://%s:%s@dynamic.zoneedit.com/txt-create.php?host=%s&rdata=%s"
-
-# Added changed defines in the rm subsubroutine inorde to utilize zoneedit delete endpoint
-# Zoneedit_API="https://dynamic.zoneedit.com/txt-delete.php"
-# Zoneedit_API_GET="https://%s:%s@dynamic.zoneedit.com/txt-delete.php?host=%s&rdata=%s"
-
+# Applications, such as pfsense, require a successful return code to update the cert.
 
 #Usage: dns_zoneedit_add   _acme-challenge.www.domain.com   "XKrxpRBosdIKFzxW_CT3KLZNf6q0HG9i01zxXp5CPBs"
 dns_zoneedit_add() {
@@ -63,12 +58,7 @@ dns_zoneedit_add() {
   _debug _sub_domain "$_sub_domain"
   _debug _domain "$_domain"
 
- 
-  #I don't know if you loop back to this with multiple domains so 
-  Zoneedit_API="https://dynamic.zoneedit.com/txt-create.php"
-  Zoneedit_API_GET="https://%s:%s@dynamic.zoneedit.com/txt-create.php?host=%s&rdata=%s"
- 
-  if _zoneedit_api "ADD" "$fulldomain" "$txtvalue"; then
+  if _zoneedit_api "CREATE" "$fulldomain" "$txtvalue"; then
     if printf -- "%s" "$response" | grep "OK." >/dev/null; then
       _info "Added, OK"
       return 0
@@ -88,7 +78,7 @@ dns_zoneedit_add() {
 dns_zoneedit_rm() {
   fulldomain=$1
   txtvalue=$2
-  _info "Using myapi"
+  _info "Using Zoneedit"
   _debug fulldomain "$fulldomain"
   _debug txtvalue "$txtvalue"
 
@@ -112,12 +102,6 @@ dns_zoneedit_rm() {
 
   _debug _sub_domain "$_sub_domain"
   _debug _domain "$_domain"
-
-  # TODO: test the txt-delete endpoint that ZoneEdit added.
-  # Applications, such as pfsense, require a successful return code to update the cert.
-  # Note create changed to delete in url
-  Zoneedit_API="https://dynamic.zoneedit.com/txt-delete.php"
-  Zoneedit_API_GET="https://%s:%s@dynamic.zoneedit.com/txt-delete.php?host=%s&rdata=%s"
 
   if _zoneedit_api "DELETE" "$fulldomain" "$txtvalue"; then
      if printf -- "%s" "$response" | grep "OK." >/dev/null; then
@@ -174,28 +158,34 @@ _get_root() {
   return 0
 }
 
-
 _zoneedit_api() {
-  cmd=$1
+  cmd=$1		# CREATE | DELETE
   domain=$2
   txtvalue=$3
 
+  # Base64 encode the credentials
+  credentials=$(printf "%s:%s" "$ZONEEDIT_ID" "$ZONEEDIT_Token" | _base64)
+  # Construct the HTTP Authorization header
+  export _H1="Authorization: Basic ${credentials}"
 
-  if  [ "$cmd" != "GET" ]; then
-    # Base64 encode the credentials
-    credentials=$(printf "%s:%s" "$ZONEEDIT_ID" "$ZONEEDIT_Token" | _base64)
-    # Construct the HTTP Authorization header
-    export _H1="Content-Type: application/json"
-    export _H2="Authorization: Basic ${credentials}"
-    data="$(printf "{host=%s&rdata=%s}" "$domain" "$txtvalue")"
-    msg="$(printf "host=%s&rdata=%s" "$domain" "$txtvalue")"
-    url="$Zoneedit_API?$msg"
-    response="$(_post "" "$url" "" "$cmd" )"
-  else
-    geturl="$(printf "$Zoneedit_API_GET" "$ZONEEDIT_ID" "$ZONEEDIT_Token" "$domain" "$txtvalue")"
-    response="$(_get "$geturl")"
-  fi
+  # Generate request URL
+  case "$cmd" in
+  "CREATE")
+    geturl="$(printf "$Zoneedit_API_Create" "$domain" "$txtvalue")"
+	;;
+  "DELETE")
+    geturl="$(printf "$Zoneedit_API_Delete" "$domain" "$txtvalue")"
+	;;
+  *)
+    _err "Unknown parameter : $cmd"
+    return 1
+    ;;
+  esac
 
+  # Execute the request
+  response="$(_get "$geturl")"
+
+  # Error checking
   if [ "$?" != "0" ]; then
     _err "error $domain $response"
     return 1
