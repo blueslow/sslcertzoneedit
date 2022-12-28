@@ -41,7 +41,7 @@ Zoneedit_API_Delete="https://dynamic.zoneedit.com/txt-delete.php?host=%s&rdata=%
 dns_zoneedit_add() {
   fulldomain=$1
   txtvalue=$2
-  _info "Using Zoneedit"
+  _info "Using Zonedit"
   _debug fulldomain "$fulldomain"
   _debug txtvalue "$txtvalue"
 
@@ -61,28 +61,18 @@ dns_zoneedit_add() {
   _saveaccountconf_mutable ZONEEDIT_ID "$ZONEEDIT_ID"
   _saveaccountconf_mutable ZONEEDIT_Token "$ZONEEDIT_Token"
 
-  _debug "First detect the root zone."
-  if ! _get_root "$fulldomain" ; then
-    _err "invalid domain"
-    return 1
-  fi
-
-  _debug _sub_domain "$_sub_domain"
-  _debug _domain "$_domain"
-
   if _zoneedit_api "CREATE" "$fulldomain" "$txtvalue"; then
     if printf -- "%s" "$response" | grep "OK." >/dev/null; then
       _info "Added, OK"
       return 0
     else
-      _err "Add txt record error, H1."
+      _err "Add txt record error."
       return 1
     fi
   fi
-
-  _err "Add txt record error H2?"
-
+  _err "Add txt record error."
   return 1
+
 }
 
 #Usage: fulldomain txtvalue
@@ -106,15 +96,6 @@ dns_zoneedit_rm() {
     return 1
   fi
 
-  _debug "First detect the root zone"
-  if ! _get_root "$fulldomain"; then
-    _err "invalid domain"
-    return 1
-  fi
-
-  _debug _sub_domain "$_sub_domain"
-  _debug _domain "$_domain"
-
   if _zoneedit_api "DELETE" "$fulldomain" "$txtvalue"; then
      if printf -- "%s" "$response" | grep "OK." >/dev/null; then
        _info "Deleted, OK"
@@ -124,51 +105,11 @@ dns_zoneedit_rm() {
        return 1
      fi
    fi
-
   return 1
+  
 }
 
 ####################  Private functions below ##################################
-#usage:
-# _getroot _acme-challenge.www.domain.com
-# returns
-#  _sub_domain=_acme-challenge.www
-#  _domain=domain.com
-# Note this is a hack. It does not work on sub domains
-# _getroot _acme-challenge.www.somedomain.co.uk
-# _getroot _acme-challenge.somedomain.co.uk
-
-_get_root() {
-  fulldomain=$1
-
-  # Get the root domain
-  ndots=$(echo $fulldomain | tr -dc '.' | wc -c)
-  if [ "$ndots" -lt "2" ]; then
-      # invalid fulldomain
-      _err "Invalid fulldomain"
-      return 1
-  fi
-  upper=$(($ndots -1))
-  sinterval="1-$upper"
-  dinterval="$(($ndots))-"
-  # _info "intervals $fulldomain, $ndots, $upper, $dinterval, $sinterval"
-  _domain=$(echo "$fulldomain" | cut -d . -f "$dinterval")
-  _sub_domain=$(echo "$fulldomain" | cut -d . -f "$sinterval")
-
-  if [ -z "$_domain" ]; then
-    _err "Get root: $_domain"
-    return 1
-  fi
-
-  if [ -z "$_sub_domain"  ]; then
-    # Not valid should cointain at least _acme-challenge
-    _err "Get root: $_sub_domain"
-    return 1
-  fi
-
-  # _info "end get root d:$_domain , s:$_sub_domain"
-  return 0
-}
 
 #Usage: _zoneedit_api <CREATE|DELETE> <full domain> <rdata>
 _zoneedit_api() {
