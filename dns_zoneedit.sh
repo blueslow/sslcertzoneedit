@@ -19,6 +19,7 @@ Zoneedit_API_Delete="https://dynamic.zoneedit.com/txt-delete.php?host=%s&rdata=%
 # * Fix wildcard timeout, min 10 seconds between same-name TXT record creation OR deletion (well it only takes one request to delete both, haven't got far enough to see what acme.sh does at that stage)
 # * Have to wait 10 seconds beteen create and delete also.
 # * Wait 1s (2s to be safe) after each delete to work around Zonedit API bug.
+# * non-infinite loop
 # * Show method used (CREATE/DELETE) in log
 # * Credentials not actually hidden???
 # * Logging cleanup
@@ -139,18 +140,17 @@ _zoneedit_api() {
     response="$(_get "$geturl")"
     _debug2 response "$response"
     if _contains "$response" "SUCCESS CODE=\"200\""; then
+      # Sleep (when needed) to work around a Zonedit API bug
+      # https://forum.zoneedit.com/threads/automating-changes-of-txt-records-in-dns.7394/page-2#post-23855
+      if [ "$ze_sleep" ]; then _sleep $ze_sleep; fi
+
       return 0
     elif _contains "$response" "ERROR" && _contains "$response" "TEXT=\"Minimum"; then
-      echo "$response" | _egrep_o '[0-9]+ seconds'
-      _info 
+      ze_ratelimit=$(echo "$response" | sed 's/.*Minimum \([0-9]\+\) seconds.*/\1/')
+      _info "Zoneedit rate limit of $ze_ratelimit seconds."
+      _sleep $ze_ratelimit
     else
       return 1
     fi
   done
-
-  # Sleep (when needed) to work around a Zonedit API bug
-  # https://forum.zoneedit.com/threads/automating-changes-of-txt-records-in-dns.7394/page-2#post-23855
-  if [ "$ze_sleep" ]; then _sleep $ze_sleep; fi
-
-  return 0
 }
