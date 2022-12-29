@@ -16,11 +16,14 @@ Zoneedit_API_Delete="https://dynamic.zoneedit.com/txt-delete.php?host=%s&rdata=%
 # Applications, such as pfsense, require a successful return code to update the cert.
 
 # Notes/To Do (!remove me before merge!)
-# * _get_root() is not needed to work with ZoneEdit's API, so it can probably be removed.
 # * Fix wildcard timeout, min 10 seconds between same-name TXT record creation OR deletion (well it only takes one request to delete both, haven't got far enough to see what acme.sh does at that stage)
+# * Have to wait 10 seconds beteen create and delete also.
+# * Wait 1s (2s to be safe) after each delete to work around Zonedit API bug.
 # * Show method used (CREATE/DELETE) in log
 # * Credentials not actually hidden???
 # * Logging cleanup
+# * Conformance against dns_cf.sh (and whatever else the WIKI calls for integration)
+# * POSIX
 # * Test
 #   - dom.tld
 #   - sub.dom.tld
@@ -28,6 +31,7 @@ Zoneedit_API_Delete="https://dynamic.zoneedit.com/txt-delete.php?host=%s&rdata=%
 #   - dom.tld sub.dom.tld
 #   - dom.tld *.dom.tld (wildcard domain)
 #   - sub.dom.tld *.sub.dom.tld (wildcard domain)
+#   - docker
 # * https://github.com/acmesh-official/acme.sh/issues/1261
 # * https://github.com/acmesh-official/acme.sh/wiki/DNS-alias-mode
 #
@@ -62,17 +66,14 @@ dns_zoneedit_add() {
   _saveaccountconf_mutable ZONEEDIT_Token "$ZONEEDIT_Token"
 
   if _zoneedit_api "CREATE" "$fulldomain" "$txtvalue"; then
-    if printf -- "%s" "$response" | grep "OK." >/dev/null; then
-      _info "Added, OK"
-      return 0
-    else
-      _err "Add txt record error."
-      return 1
-    fi
+    _info "Added, OK"
+    return 0
+  else
+    _err "Add txt record error."
+    return 1
   fi
-  _err "Add txt record error."
-  return 1
-
+  # _err "Add txt record error."
+  # return 1
 }
 
 #Usage: fulldomain txtvalue
@@ -87,8 +88,7 @@ dns_zoneedit_rm() {
   # Load the credentials from the account conf file
   ZONEEDIT_ID="${ZONEEDIT_ID:-$(_readaccountconf_mutable ZONEEDIT_ID)}"
   ZONEEDIT_Token="${ZONEEDIT_Token:-$(_readaccountconf_mutable ZONEEDIT_Token)}"
-  if [ -z "$ZONEEDIT_ID" ] ||
-     [ -z "$ZONEEDIT_Token" ] ; then
+  if [ -z "$ZONEEDIT_ID" ] || [ -z "$ZONEEDIT_Token" ]; then
     ZONEEDIT_ID=""
     ZONEEDIT_Token=""
     _err "Please specify ZONEEDIT_ID and _Token ."
@@ -97,16 +97,13 @@ dns_zoneedit_rm() {
   fi
 
   if _zoneedit_api "DELETE" "$fulldomain" "$txtvalue"; then
-     if printf -- "%s" "$response" | grep "OK." >/dev/null; then
-       _info "Deleted, OK"
-       return 0
-     else
-       _err "Delete txt record error."
-       return 1
-     fi
-   fi
-  return 1
-  
+    _info "Deleted, OK"
+    return 0
+  else
+    _err "Delete txt record error."
+    return 1
+  fi
+  # return 1
 }
 
 ####################  Private functions below ##################################
@@ -129,6 +126,7 @@ _zoneedit_api() {
 	;;
   "DELETE")
     geturl="$(printf "$Zoneedit_API_Delete" "$domain" "$txtvalue")"
+    ze_sleep=2
 	;;
   *)
     _err "Unknown parameter : $cmd"
@@ -137,20 +135,22 @@ _zoneedit_api() {
   esac
 
   # Execute the request
-  response="$(_get "$geturl")"
+  while true; do
+    response="$(_get "$geturl")"
+    _debug2 response "$response"
+    if _contains "$response" "SUCCESS CODE=\"200\""; then
+      return 0
+    elif _contains "$response" "ERROR" && _contains "$response" "TEXT=\"Minimum"; then
+      echo "$response" | _egrep_o '[0-9]+ seconds'
+      _info 
+    else
+      return 1
+    fi
+  done
 
-  # Error checking
-  if [ "$?" != "0" ]; then
-    _err "error $domain $response"
-    return 1
-  fi
-  if [ "${response%%TEXT*}" != '<SUCCESS CODE="200" ' ]; then
-    _err "error $domain $cmd $response"
-    return 1
-  fi
-  # The succes test can be more extensive
-  # but the below is sufficient
-  response="OK."
+  # Sleep (when needed) to work around a Zonedit API bug
+  # https://forum.zoneedit.com/threads/automating-changes-of-txt-records-in-dns.7394/page-2#post-23855
+  if [ "$ze_sleep" ]; then _sleep $ze_sleep; fi
 
   return 0
 }
