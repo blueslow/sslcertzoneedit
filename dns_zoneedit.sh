@@ -16,9 +16,7 @@ Zoneedit_API_Delete="https://dynamic.zoneedit.com/txt-delete.php?host=%s&rdata=%
 # Applications, such as pfsense, require a successful return code to update the cert.
 
 # Notes/To Do (!remove me before merge!)
-# * Fix wildcard timeout, min 10 seconds between same-name TXT record creation OR deletion (well it only takes one request to delete both, haven't got far enough to see what acme.sh does at that stage)
-# * Have to wait 10 seconds beteen create and delete also.
-# * Wait 1s (2s to be safe) after each delete to work around Zonedit API bug.
+# * shellcheck & shfmt
 # * non-infinite loop
 # * Show method used (CREATE/DELETE) in log
 # * Credentials not actually hidden???
@@ -31,10 +29,11 @@ Zoneedit_API_Delete="https://dynamic.zoneedit.com/txt-delete.php?host=%s&rdata=%
 #   - dom.tld dom2.tld
 #   - dom.tld sub.dom.tld
 #   - dom.tld *.dom.tld (wildcard domain)
-#   - sub.dom.tld *.sub.dom.tld (wildcard domain)
+#   - sub.dom.tld *.sub.dom.tld (wildcard domain) --> Works.
 #   - docker
 # * https://github.com/acmesh-official/acme.sh/issues/1261
 # * https://github.com/acmesh-official/acme.sh/wiki/DNS-alias-mode
+# * https://github.com/acmesh-official/acme.sh/wiki/Code-of-conduct
 #
 # https://github.com/acmesh-official/acme.sh/wiki/DNS-API-Dev-Guide
 #
@@ -54,7 +53,7 @@ dns_zoneedit_add() {
   ZONEEDIT_ID="${ZONEEDIT_ID:-$(_readaccountconf_mutable ZONEEDIT_ID)}"
   ZONEEDIT_Token="${ZONEEDIT_Token:-$(_readaccountconf_mutable ZONEEDIT_Token)}"
   if [ -z "$ZONEEDIT_ID" ] ||
-     [ -z "$ZONEEDIT_Token" ] ; then
+    [ -z "$ZONEEDIT_Token" ]; then
     ZONEEDIT_ID=""
     ZONEEDIT_Token=""
     _err "Please specify ZONEEDIT_ID and _Token ."
@@ -111,7 +110,7 @@ dns_zoneedit_rm() {
 
 #Usage: _zoneedit_api <CREATE|DELETE> <full domain> <rdata>
 _zoneedit_api() {
-  cmd=$1		# CREATE | DELETE
+  cmd=$1 # CREATE | DELETE
   domain=$2
   txtvalue=$3
 
@@ -123,12 +122,12 @@ _zoneedit_api() {
   # Generate request URL
   case "$cmd" in
   "CREATE")
-    geturl="$(printf "$Zoneedit_API_Create" "$domain" "$txtvalue")"
-	;;
+    geturl="$(printf "$Zoneedit_API_Create" "$domain" "$txtvalue")" # shellcheck dislike $Zoneedit var, but it is intended, decide what to do.
+    ;;
   "DELETE")
-    geturl="$(printf "$Zoneedit_API_Delete" "$domain" "$txtvalue")"
+    geturl="$(printf "$Zoneedit_API_Delete" "$domain" "$txtvalue")" # shellcheck dislike $Zoneedit var, but it is intended, decide what to do.
     ze_sleep=2
-	;;
+    ;;
   *)
     _err "Unknown parameter : $cmd"
     return 1
@@ -136,21 +135,31 @@ _zoneedit_api() {
   esac
 
   # Execute the request
-  while true; do
-    response="$(_get "$geturl")"
+  i=3 # sub-opt
+  while [ $i -gt 0 ]; do
+    # if i fail, msg
+  
+    if ! response=$(_get "$geturl"); then
+      _err "_get() failed ($response)"
+      return 1
+    fi
     _debug2 response "$response"
     if _contains "$response" "SUCCESS CODE=\"200\""; then
       # Sleep (when needed) to work around a Zonedit API bug
       # https://forum.zoneedit.com/threads/automating-changes-of-txt-records-in-dns.7394/page-2#post-23855
-      if [ "$ze_sleep" ]; then _sleep $ze_sleep; fi
-
+      if [ "$ze_sleep" ]; then _sleep "$ze_sleep"; fi
       return 0
     elif _contains "$response" "ERROR" && _contains "$response" "TEXT=\"Minimum"; then
       ze_ratelimit=$(echo "$response" | sed 's/.*Minimum \([0-9]\+\) seconds.*/\1/')
-      _info "Zoneedit rate limit of $ze_ratelimit seconds."
-      _sleep $ze_ratelimit
+      _info "Zoneedit responded with a rate limit of $ze_ratelimit seconds."
+      _sleep "$ze_ratelimit"
     else
-      return 1
+      # INCOMPLETE
+      _err "$response"
+      _err "Unknown response, API change? Will re-try after 10 seconds."
+      _sleep 10
     fi
+    i=$(_math "$i" - 1)
   done
+  return 1
 }
