@@ -7,12 +7,6 @@
 # export ZONEEDIT_Token="Your token"
 # acme.sh --issue --dns dns_zoneedit -d example.com -d www.example.com
 
-# ZoneEdit HTTP API
-# https://dynamic.zoneedit.com/txt-create.php?host=_acme-challenge.example.com&rdata=depE1VF_xshMm1IVY1Y56Kk9Zb_7jA2VFkP65WuNgu8W
-# https://dynamic.zoneedit.com/txt-delete.php?host=_acme-challenge.example.com&rdata=depE1VF_xshMm1IVY1Y56Kk9Zb_7jA2VFkP65WuNgu8W
-Zoneedit_API_Create="https://dynamic.zoneedit.com/txt-create.php?host=%s&rdata=%s"
-Zoneedit_API_Delete="https://dynamic.zoneedit.com/txt-delete.php?host=%s&rdata=%s"
-
 # Applications, such as pfsense, require a successful return code to update the cert.
 
 # Notes/To Do (!remove me before merge!)
@@ -41,7 +35,7 @@ Zoneedit_API_Delete="https://dynamic.zoneedit.com/txt-delete.php?host=%s&rdata=%
 
 ########  Public functions #####################
 
-#Usage: dns_zoneedit_add   _acme-challenge.www.domain.com   "XKrxpRBosdIKFzxW_CT3KLZNf6q0HG9i01zxXp5CPBs"
+# Usage: dns_zoneedit_add   _acme-challenge.www.domain.com   "XKrxpRBosdIKFzxW_CT3KLZNf6q0HG9i01zxXp5CPBs"
 dns_zoneedit_add() {
   fulldomain=$1
   txtvalue=$2
@@ -52,11 +46,10 @@ dns_zoneedit_add() {
   # Load the credentials from the account conf file
   ZONEEDIT_ID="${ZONEEDIT_ID:-$(_readaccountconf_mutable ZONEEDIT_ID)}"
   ZONEEDIT_Token="${ZONEEDIT_Token:-$(_readaccountconf_mutable ZONEEDIT_Token)}"
-  if [ -z "$ZONEEDIT_ID" ] ||
-    [ -z "$ZONEEDIT_Token" ]; then
+  if [ -z "$ZONEEDIT_ID" ] || [ -z "$ZONEEDIT_Token" ]; then
     ZONEEDIT_ID=""
     ZONEEDIT_Token=""
-    _err "Please specify ZONEEDIT_ID and _Token ."
+    _err "Please specify ZONEEDIT_ID and _Token."
     _err "Please export as ZONEEDIT_ID and ZONEEDIT_Token then try again."
     return 1
   fi
@@ -72,12 +65,9 @@ dns_zoneedit_add() {
     _err "Add txt record error."
     return 1
   fi
-  # _err "Add txt record error."
-  # return 1
 }
 
-#Usage: fulldomain txtvalue
-#Remove the txt record after validation.
+# Usage: dns_zoneedit_rm   fulldomain   txtvalue
 dns_zoneedit_rm() {
   fulldomain=$1
   txtvalue=$2
@@ -91,7 +81,7 @@ dns_zoneedit_rm() {
   if [ -z "$ZONEEDIT_ID" ] || [ -z "$ZONEEDIT_Token" ]; then
     ZONEEDIT_ID=""
     ZONEEDIT_Token=""
-    _err "Please specify ZONEEDIT_ID and _Token ."
+    _err "Please specify ZONEEDIT_ID and _Token."
     _err "Please export as ZONEEDIT_ID and ZONEEDIT_Token then try again."
     return 1
   fi
@@ -103,29 +93,29 @@ dns_zoneedit_rm() {
     _err "Delete txt record error."
     return 1
   fi
-  # return 1
 }
 
 ####################  Private functions below ##################################
 
-#Usage: _zoneedit_api <CREATE|DELETE> <full domain> <rdata>
+#Usage: _zoneedit_api   <CREATE|DELETE>   fulldomain   txtvalue
 _zoneedit_api() {
-  cmd=$1 # CREATE | DELETE
-  domain=$2
+  cmd=$1
+  fulldomain=$2
   txtvalue=$3
 
-  # Base64 encode the credentials
+  # Construct basic authorization header
   credentials=$(printf "%s:%s" "$ZONEEDIT_ID" "$ZONEEDIT_Token" | _base64)
-  # Construct the HTTP Authorization header
   export _H1="Authorization: Basic ${credentials}"
 
   # Generate request URL
   case "$cmd" in
   "CREATE")
-    geturl="$(printf "$Zoneedit_API_Create" "$domain" "$txtvalue")" # shellcheck dislike $Zoneedit var, but it is intended, decide what to do.
+    # https://dynamic.zoneedit.com/txt-create.php?host=_acme-challenge.example.com&rdata=depE1VF_xshMm1IVY1Y56Kk9Zb_7jA2VFkP65WuNgu8W
+    geturl="https://dynamic.zoneedit.com/txt-create.php?host=${fulldomain}&rdata=${txtvalue}"
     ;;
   "DELETE")
-    geturl="$(printf "$Zoneedit_API_Delete" "$domain" "$txtvalue")" # shellcheck dislike $Zoneedit var, but it is intended, decide what to do.
+    # https://dynamic.zoneedit.com/txt-delete.php?host=_acme-challenge.example.com&rdata=depE1VF_xshMm1IVY1Y56Kk9Zb_7jA2VFkP65WuNgu8W
+    geturl="https://dynamic.zoneedit.com/txt-delete.php?host=${fulldomain}&rdata=${txtvalue}"
     ze_sleep=2
     ;;
   *)
@@ -134,11 +124,11 @@ _zoneedit_api() {
     ;;
   esac
 
-  # Execute the request
+  # Execute request
   i=3 # sub-opt
   while [ $i -gt 0 ]; do
     # if i fail, msg
-  
+
     if ! response=$(_get "$geturl"); then
       _err "_get() failed ($response)"
       return 1
