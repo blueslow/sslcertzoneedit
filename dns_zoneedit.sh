@@ -7,8 +7,6 @@
 # export ZONEEDIT_Token="Your token"
 # acme.sh --issue --dns dns_zoneedit -d example.com -d www.example.com
 
-# Applications, such as pfsense, require a successful return code to update the cert.
-
 ########  Public functions #####################
 
 # Usage: dns_zoneedit_add   _acme-challenge.www.domain.com   "XKrxpRBosdIKFzxW_CT3KLZNf6q0HG9i01zxXp5CPBs"
