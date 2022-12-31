@@ -9,30 +9,6 @@
 
 # Applications, such as pfsense, require a successful return code to update the cert.
 
-# Notes/To Do (!remove me before merge!)
-# * shellcheck & shfmt
-# * non-infinite loop
-# * Show method used (CREATE/DELETE) in log
-# * Credentials not actually hidden???
-# * Logging cleanup
-# * Conformance against dns_cf.sh (and whatever else the WIKI calls for integration)
-# * POSIX
-# * Test
-#   - dom.tld
-#   - sub.dom.tld
-#   - dom.tld dom2.tld
-#   - dom.tld sub.dom.tld
-#   - dom.tld *.dom.tld (wildcard domain)
-#   - sub.dom.tld *.sub.dom.tld (wildcard domain) --> Works.
-#   - docker
-# * https://github.com/acmesh-official/acme.sh/issues/1261
-# * https://github.com/acmesh-official/acme.sh/wiki/DNS-alias-mode
-# * https://github.com/acmesh-official/acme.sh/wiki/Code-of-conduct
-#
-# https://github.com/acmesh-official/acme.sh/wiki/DNS-API-Dev-Guide
-#
-# Please take care that the rm function and add function are called in 2 different isolated subshells. So, you can not pass any env vars from the add function to the rm function. You must re-do all the preparations of the add function here too.
-
 ########  Public functions #####################
 
 # Usage: dns_zoneedit_add   _acme-challenge.www.domain.com   "XKrxpRBosdIKFzxW_CT3KLZNf6q0HG9i01zxXp5CPBs"
@@ -125,31 +101,47 @@ _zoneedit_api() {
   esac
 
   # Execute request
-  i=3 # sub-opt
+  i=3 # Tries
   while [ $i -gt 0 ]; do
-    # if i fail, msg
+    i=$(_math "$i" - 1)
 
     if ! response=$(_get "$geturl"); then
       _err "_get() failed ($response)"
       return 1
     fi
     _debug2 response "$response"
-    if _contains "$response" "SUCCESS CODE=\"200\""; then
+    if _contains "$response" "SUCCESS.*200"; then
       # Sleep (when needed) to work around a Zonedit API bug
       # https://forum.zoneedit.com/threads/automating-changes-of-txt-records-in-dns.7394/page-2#post-23855
       if [ "$ze_sleep" ]; then _sleep "$ze_sleep"; fi
       return 0
-    elif _contains "$response" "ERROR" && _contains "$response" "TEXT=\"Minimum"; then
-      ze_ratelimit=$(echo "$response" | sed 's/.*Minimum \([0-9]\+\) seconds.*/\1/')
-      _info "Zoneedit responded with a rate limit of $ze_ratelimit seconds."
+    elif _contains "$response" "ERROR.*Minimum.*seconds"; then
+      _info "Zoneedit responded with a rate limit of..."
+      ze_ratelimit=$(echo "$response" | sed -n 's/.*Minimum \([0-9]\+\) seconds.*/\1/p')
+      if [ "$ze_ratelimit" ] && [ ! "$(echo "$ze_ratelimit" | tr -d '0-9')" ]; then
+        _info "$ze_ratelimit seconds."
+      else
+        _err "$response"
+        _err "not a number, or blank ($ze_ratelimit), API change?"
+        unset ze_ratelimit
+      fi
+    else
+      _err "$response"
+      _err "Unknown response, API change?"
+    fi
+
+    # Retry
+    if [ "$i" -lt 1 ]; then
+      _err "Tries exceeded, giving up."
+      return 1
+    fi
+    if [ "$ze_ratelimit" ]; then
+      _info "Waiting $ze_ratelimit seconds..."
       _sleep "$ze_ratelimit"
     else
-      # INCOMPLETE
-      _err "$response"
-      _err "Unknown response, API change? Will re-try after 10 seconds."
+      _err "Going to retry after 10 seconds..."
       _sleep 10
     fi
-    i=$(_math "$i" - 1)
   done
   return 1
 }
