@@ -85,7 +85,13 @@ In pfsense when acme pakage is updated acme.inc is overwritten, thus it has to b
   - Implemented 22-12-27
 * Provide diff file and a script to update the acme.inc file in pfsense. 
   - Implemented 22-12-27
+* dns_zoneedit_add and dns_zoneedit_rm improved and cleaned up 
+  - Merged 23-01-02
+
+## Aknowledgements
+* Thanks to onley for dns_zoneedit_rm
+* Thanks to sbn-purchark for mayorimprovement of the script.
 
 ## Known issues
-* It has been reported that dns_zoneedit_rm  reporte in false positives in some cases.
+* It has been reported that dns_zoneedit_rm reports in false positives in some cases.
 
