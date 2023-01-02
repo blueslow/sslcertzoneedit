@@ -13,7 +13,7 @@
 dns_zoneedit_add() {
   fulldomain=$1
   txtvalue=$2
-  _info "Using Zonedit"
+  _info "Using Zoneedit"
   _debug fulldomain "$fulldomain"
   _debug txtvalue "$txtvalue"
 
