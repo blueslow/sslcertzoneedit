@@ -1,37 +1,48 @@
 #!/usr/bin/env sh
 
-#Here is a smaple custom api script.
-#This file name is "dns_zoneedit.sh"
-#So, here must be a method  dns_zoneedit_add()
-#Which will be called by acme.sh to add the txt record to your api system.
-#returns 0 means success, otherwise error.
-#
-#Author: Neilpang
-#Report Bugs here: https://github.com/acmesh-official/acme.sh
-#
+# https://github.com/blueslow/sslcertzoneedit
+
+# Only need to export the credentials once, acme.sh will save for automatic renewal.
+# export ZONEEDIT_ID="Your id"
+# export ZONEEDIT_Token="Your token"
+# acme.sh --issue --dns dns_zoneedit -d example.com -d www.example.com
+
 ########  Public functions #####################
 
-# Please Read this guide first: https://github.com/acmesh-official/acme.sh/wiki/DNS-API-Dev-Guide
-
-#ZONEEDIT_Token
-#ZONEEDIT_ID
-
-# Example:
-# https://dynamic.zoneedit.com/txt-create.php?host=_acme-challenge.example.com&rdata=depE1VF_xshMm1IVY1Y56Kk9Zb_7jA2VFkP65WuNgu8W
-
-
-#
-# Moved these defines into the add subroutine below
-# Zoneedit_API="https://dynamic.zoneedit.com/txt-create.php"
-# Zoneedit_API_GET="https://%s:%s@dynamic.zoneedit.com/txt-create.php?host=%s&rdata=%s"
-
-# Added changed defines in the rm subsubroutine inorde to utilize zoneedit delete endpoint
-# Zoneedit_API="https://dynamic.zoneedit.com/txt-delete.php"
-# Zoneedit_API_GET="https://%s:%s@dynamic.zoneedit.com/txt-delete.php?host=%s&rdata=%s"
-
-
-#Usage: dns_zoneedit_add   _acme-challenge.www.domain.com   "XKrxpRBosdIKFzxW_CT3KLZNf6q0HG9i01zxXp5CPBs"
+# Usage: dns_zoneedit_add   _acme-challenge.www.domain.com   "XKrxpRBosdIKFzxW_CT3KLZNf6q0HG9i01zxXp5CPBs"
 dns_zoneedit_add() {
+  fulldomain=$1
+  txtvalue=$2
+  _info "Using Zonedit"
+  _debug fulldomain "$fulldomain"
+  _debug txtvalue "$txtvalue"
+
+  # Load the credentials from the account conf file
+  ZONEEDIT_ID="${ZONEEDIT_ID:-$(_readaccountconf_mutable ZONEEDIT_ID)}"
+  ZONEEDIT_Token="${ZONEEDIT_Token:-$(_readaccountconf_mutable ZONEEDIT_Token)}"
+  if [ -z "$ZONEEDIT_ID" ] || [ -z "$ZONEEDIT_Token" ]; then
+    ZONEEDIT_ID=""
+    ZONEEDIT_Token=""
+    _err "Please specify ZONEEDIT_ID and _Token."
+    _err "Please export as ZONEEDIT_ID and ZONEEDIT_Token then try again."
+    return 1
+  fi
+
+  # Save the credentials to the account conf file
+  _saveaccountconf_mutable ZONEEDIT_ID "$ZONEEDIT_ID"
+  _saveaccountconf_mutable ZONEEDIT_Token "$ZONEEDIT_Token"
+
+  if _zoneedit_api "CREATE" "$fulldomain" "$txtvalue"; then
+    _info "Added, OK"
+    return 0
+  else
+    _err "Add txt record error."
+    return 1
+  fi
+}
+
+# Usage: dns_zoneedit_rm   fulldomain   txtvalue
+dns_zoneedit_rm() {
   fulldomain=$1
   txtvalue=$2
   _info "Using Zoneedit"
@@ -41,172 +52,94 @@ dns_zoneedit_add() {
   # Load the credentials from the account conf file
   ZONEEDIT_ID="${ZONEEDIT_ID:-$(_readaccountconf_mutable ZONEEDIT_ID)}"
   ZONEEDIT_Token="${ZONEEDIT_Token:-$(_readaccountconf_mutable ZONEEDIT_Token)}"
-  if [ -z "$ZONEEDIT_ID" ] ||
-     [ -z "$ZONEEDIT_Token" ] ; then
+  if [ -z "$ZONEEDIT_ID" ] || [ -z "$ZONEEDIT_Token" ]; then
     ZONEEDIT_ID=""
     ZONEEDIT_Token=""
-    _err "Please specify ZONEEDIT_ID and _Token ."
+    _err "Please specify ZONEEDIT_ID and _Token."
     _err "Please export as ZONEEDIT_ID and ZONEEDIT_Token then try again."
     return 1
   fi
-
-  # Save the credentials to the account conf file
-  _saveaccountconf_mutable ZONEEDIT_ID "$ZONEEDIT_ID"
-  _saveaccountconf_mutable ZONEEDIT_Token "$ZONEEDIT_Token"
-
-  _debug "First detect the root zone."
-  if ! _get_root "$fulldomain" ; then
-    _err "invalid domain"
-    return 1
-  fi
-
-  _debug _sub_domain "$_sub_domain"
-  _debug _domain "$_domain"
-
- 
-  #I don't know if you loop back to this with multiple domains so 
-  Zoneedit_API="https://dynamic.zoneedit.com/txt-create.php"
-  Zoneedit_API_GET="https://%s:%s@dynamic.zoneedit.com/txt-create.php?host=%s&rdata=%s"
- 
-  if _zoneedit_api "ADD" "$fulldomain" "$txtvalue"; then
-    if printf -- "%s" "$response" | grep "OK." >/dev/null; then
-      _info "Added, OK"
-      return 0
-    else
-      _err "Add txt record error, H1."
-      return 1
-    fi
-  fi
-
-  _err "Add txt record error H2?"
-
-  return 1
-}
-
-#Usage: fulldomain txtvalue
-#Remove the txt record after validation.
-dns_zoneedit_rm() {
-  fulldomain=$1
-  txtvalue=$2
-  _info "Using myapi"
-  _debug fulldomain "$fulldomain"
-  _debug txtvalue "$txtvalue"
-
-  # Load the credentials from the account conf file
-  ZONEEDIT_ID="${ZONEEDIT_ID:-$(_readaccountconf_mutable ZONEEDIT_ID)}"
-  ZONEEDIT_Token="${ZONEEDIT_Token:-$(_readaccountconf_mutable ZONEEDIT_Token)}"
-  if [ -z "$ZONEEDIT_ID" ] ||
-     [ -z "$ZONEEDIT_Token" ] ; then
-    ZONEEDIT_ID=""
-    ZONEEDIT_Token=""
-    _err "Please specify ZONEEDIT_ID and _Token ."
-    _err "Please export as ZONEEDIT_ID and ZONEEDIT_Token then try again."
-    return 1
-  fi
-
-  _debug "First detect the root zone"
-  if ! _get_root "$fulldomain"; then
-    _err "invalid domain"
-    return 1
-  fi
-
-  _debug _sub_domain "$_sub_domain"
-  _debug _domain "$_domain"
-
-  # TODO: test the txt-delete endpoint that ZoneEdit added.
-  # Applications, such as pfsense, require a successful return code to update the cert.
-  # Note create changed to delete in url
-  Zoneedit_API="https://dynamic.zoneedit.com/txt-delete.php"
-  Zoneedit_API_GET="https://%s:%s@dynamic.zoneedit.com/txt-delete.php?host=%s&rdata=%s"
 
   if _zoneedit_api "DELETE" "$fulldomain" "$txtvalue"; then
-     if printf -- "%s" "$response" | grep "OK." >/dev/null; then
-       _info "Deleted, OK"
-       return 0
-     else
-       _err "Delete txt record error."
-       return 1
-     fi
-   fi
-
-  return 1
+    _info "Deleted, OK"
+    return 0
+  else
+    _err "Delete txt record error."
+    return 1
+  fi
 }
 
 ####################  Private functions below ##################################
-#usage:
-# _getroot _acme-challenge.www.domain.com
-# returns
-#  _sub_domain=_acme-challenge.www
-#  _domain=domain.com
-# Note this is a hack. It does not work on sub domains
-# _getroot _acme-challenge.www.somedomain.co.uk
-# _getroot _acme-challenge.somedomain.co.uk
 
-_get_root() {
-  fulldomain=$1
-
-  # Get the root domain
-  ndots=$(echo $fulldomain | tr -dc '.' | wc -c)
-  if [ "$ndots" -lt "2" ]; then
-      # invalid fulldomain
-      _err "Invalid fulldomain"
-      return 1
-  fi
-  upper=$(($ndots -1))
-  sinterval="1-$upper"
-  dinterval="$(($ndots))-"
-  # _info "intervals $fulldomain, $ndots, $upper, $dinterval, $sinterval"
-  _domain=$(echo "$fulldomain" | cut -d . -f "$dinterval")
-  _sub_domain=$(echo "$fulldomain" | cut -d . -f "$sinterval")
-
-  if [ -z "$_domain" ]; then
-    _err "Get root: $_domain"
-    return 1
-  fi
-
-  if [ -z "$_sub_domain"  ]; then
-    # Not valid should cointain at least _acme-challenge
-    _err "Get root: $_sub_domain"
-    return 1
-  fi
-
-  # _info "end get root d:$_domain , s:$_sub_domain"
-  return 0
-}
-
-
+#Usage: _zoneedit_api   <CREATE|DELETE>   fulldomain   txtvalue
 _zoneedit_api() {
   cmd=$1
-  domain=$2
+  fulldomain=$2
   txtvalue=$3
 
+  # Construct basic authorization header
+  credentials=$(printf "%s:%s" "$ZONEEDIT_ID" "$ZONEEDIT_Token" | _base64)
+  export _H1="Authorization: Basic ${credentials}"
 
-  if  [ "$cmd" != "GET" ]; then
-    # Base64 encode the credentials
-    credentials=$(printf "%s:%s" "$ZONEEDIT_ID" "$ZONEEDIT_Token" | _base64)
-    # Construct the HTTP Authorization header
-    export _H1="Content-Type: application/json"
-    export _H2="Authorization: Basic ${credentials}"
-    data="$(printf "{host=%s&rdata=%s}" "$domain" "$txtvalue")"
-    msg="$(printf "host=%s&rdata=%s" "$domain" "$txtvalue")"
-    url="$Zoneedit_API?$msg"
-    response="$(_post "" "$url" "" "$cmd" )"
-  else
-    geturl="$(printf "$Zoneedit_API_GET" "$ZONEEDIT_ID" "$ZONEEDIT_Token" "$domain" "$txtvalue")"
-    response="$(_get "$geturl")"
-  fi
-
-  if [ "$?" != "0" ]; then
-    _err "error $domain $response"
+  # Generate request URL
+  case "$cmd" in
+  "CREATE")
+    # https://dynamic.zoneedit.com/txt-create.php?host=_acme-challenge.example.com&rdata=depE1VF_xshMm1IVY1Y56Kk9Zb_7jA2VFkP65WuNgu8W
+    geturl="https://dynamic.zoneedit.com/txt-create.php?host=${fulldomain}&rdata=${txtvalue}"
+    ;;
+  "DELETE")
+    # https://dynamic.zoneedit.com/txt-delete.php?host=_acme-challenge.example.com&rdata=depE1VF_xshMm1IVY1Y56Kk9Zb_7jA2VFkP65WuNgu8W
+    geturl="https://dynamic.zoneedit.com/txt-delete.php?host=${fulldomain}&rdata=${txtvalue}"
+    ze_sleep=2
+    ;;
+  *)
+    _err "Unknown parameter : $cmd"
     return 1
-  fi
-  if [ "${response%%TEXT*}" != '<SUCCESS CODE="200" ' ]; then
-    _err "error $domain $cmd $response"
-    return 1
-  fi
-  # The succes test can be more extensive
-  # but the below is sufficient
-  response="OK."
+    ;;
+  esac
 
-  return 0
+  # Execute request
+  i=3 # Tries
+  while [ $i -gt 0 ]; do
+    i=$(_math "$i" - 1)
+
+    if ! response=$(_get "$geturl"); then
+      _err "_get() failed ($response)"
+      return 1
+    fi
+    _debug2 response "$response"
+    if _contains "$response" "SUCCESS.*200"; then
+      # Sleep (when needed) to work around a Zonedit API bug
+      # https://forum.zoneedit.com/threads/automating-changes-of-txt-records-in-dns.7394/page-2#post-23855
+      if [ "$ze_sleep" ]; then _sleep "$ze_sleep"; fi
+      return 0
+    elif _contains "$response" "ERROR.*Minimum.*seconds"; then
+      _info "Zoneedit responded with a rate limit of..."
+      ze_ratelimit=$(echo "$response" | sed -n 's/.*Minimum \([0-9]\+\) seconds.*/\1/p')
+      if [ "$ze_ratelimit" ] && [ ! "$(echo "$ze_ratelimit" | tr -d '0-9')" ]; then
+        _info "$ze_ratelimit seconds."
+      else
+        _err "$response"
+        _err "not a number, or blank ($ze_ratelimit), API change?"
+        unset ze_ratelimit
+      fi
+    else
+      _err "$response"
+      _err "Unknown response, API change?"
+    fi
+
+    # Retry
+    if [ "$i" -lt 1 ]; then
+      _err "Tries exceeded, giving up."
+      return 1
+    fi
+    if [ "$ze_ratelimit" ]; then
+      _info "Waiting $ze_ratelimit seconds..."
+      _sleep "$ze_ratelimit"
+    else
+      _err "Going to retry after 10 seconds..."
+      _sleep 10
+    fi
+  done
+  return 1
 }
