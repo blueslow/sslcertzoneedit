@@ -101,7 +101,9 @@ In pfsense when acme pakage is updated acme.inc is overwritten, thus it has to b
 ## Aknowledgements
 * Thanks to onley for dns_zoneedit_rm
 * Thanks to sbn-purchark for mayor improvement of the script.
+* Thanks to denix0 for context to acme_zoneedit_inc.patch to avoid recurring failing patches when source was changed. 
 
 ## Known issues
 * It has been reported that dns_zoneedit_rm reports in false positives in some cases.
 * Pfsense integration lacks field with ability to include extra acme.sh commands and parameters.
+* Merge of context into acme_zoneedit_inc.patch is untested. If problem arises apply it manually according to above documentation. 
