@@ -1,10 +1,18 @@
-1460a1461,1469
-> $acme_domain_validation_method['dns_zoneedit'] = array('name' => "DNS-Zoneedit",
->         'fields' => array(
->                 'ZONEEDIT_ID' => array('name' => "zoneedit_id", 'columnheader' => "ID", 'type' => "textbox",
->                         'description' => "ZONEEDIT ID"
->                 ),
->                 'ZONEEDIT_Token' => array('name' => "zoneedit_token", 'columnheader' => "Token", 'type' => "textbox",
->                         'description' => "ZONEEDIT Token"
->                         )
->         ));
+--- acme.inc.orig	2023-07-19 14:49:39.000000000 -0400
++++ acme.inc	2023-11-08 20:43:55.101253000 -0500
+@@ -1461,6 +1461,15 @@
+ 			'description' => "Zonomi API Key"
+ 		)
+ 	));
++$acme_domain_validation_method['dns_zoneedit'] = array('name' => "DNS-Zoneedit",
++        'fields' => array(
++                'ZONEEDIT_ID' => array('name' => "zoneedit_id", 'columnheader' => "ID", 'type' => "textbox",
++                        'description' => "ZONEEDIT ID"
++                ),
++                'ZONEEDIT_Token' => array('name' => "zoneedit_token", 'columnheader' => "Token", 'type' => "textbox",
++                        'description' => "ZONEEDIT Token"
++                        )
++        ));
+ $acme_domain_validation_method['dns_zone'] = array('name' => "DNS-Zone.ee",
+ 	'fields' => array(
+ 		'ZONE_Username' => array('name' => "zone_username", 'columnheader' => "Username", 'type' => "textbox",
