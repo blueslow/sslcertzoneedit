@@ -1,18 +1,54 @@
---- acme.inc.orig	2023-07-19 14:49:39.000000000 -0400
-+++ acme.inc	2023-11-08 20:43:55.101253000 -0500
-@@ -1461,6 +1461,15 @@
- 			'description' => "Zonomi API Key"
- 		)
- 	));
-+$acme_domain_validation_method['dns_zoneedit'] = array('name' => "DNS-Zoneedit",
-+        'fields' => array(
-+                'ZONEEDIT_ID' => array('name' => "zoneedit_id", 'columnheader' => "ID", 'type' => "textbox",
-+                        'description' => "ZONEEDIT ID"
-+                ),
-+                'ZONEEDIT_Token' => array('name' => "zoneedit_token", 'columnheader' => "Token", 'type' => "textbox",
-+                        'description' => "ZONEEDIT Token"
-+                        )
-+        ));
- $acme_domain_validation_method['dns_zone'] = array('name' => "DNS-Zone.ee",
- 	'fields' => array(
- 		'ZONE_Username' => array('name' => "zone_username", 'columnheader' => "Username", 'type' => "textbox",
+--- org_acme.inc	2024-05-31 15:44:40.809211345 +0200
++++ new_acme.inc	2024-05-31 17:34:01.301047029 +0200
+@@ -2732,34 +2732,51 @@
+ $acme_domain_validation_method['anydns'] = [
+ 	'name' => 'notforuser',
+ 	'fields' => [
+ 		'challengealias' => [
+ 			'name' => 'challengealias',
+ 			'description' => '(Optional) Adds the --challenge-alias flag to the acme.sh call.<br/>To use a CNAME for _acme-challenge.importantDomain.tld to direct the acme validation to a different (sub)domain _acme-challenge.aliasDomainForValidationOnly.tld, configure the alternate domain here.<br/>More information can be found <a href="https://github.com/acmesh-official/acme.sh/wiki/DNS-alias-mode" target="_new">here</a>.',
+ 			'columnheader' => 'Enable DNS alias mode',
+ 			'type' => 'textbox',
+ 		],
+ 		'challengedomain' => [
+ 			'name' => 'challengedomain',
+ 			'description' => '(Optional) Uses the challenge domain alias value as --domain-alias instead in the acme.sh call.',
+ 			'columnheader' => 'Enable DNS domain alias mode',
+ 			'type' => 'checkbox',
+ 		],
+ 	]
+ ];
++$acme_domain_validation_method['dns_zoneedit'] = [
++	'name' => 'DNS-Zoneedit',
++	'fields' => [
++		'ZONEEDIT_ID' => [
++			'name' => 'zoneedit_id',
++			'description' => 'ZONEEDIT ID',
++			'columnheader' => 'ID',
++			'type' => 'textbox',
++		],
++		'ZONEEDIT_Token' => [
++			'name' => 'zoneedit_token',
++			'description' => 'ZONEEDIT Token',
++			'columnheader' => 'Token',
++			'type' => 'textbox',
++		],
++	]
++];
+ 
+ //TODO add more challenge validation types
+ /*
+ $acme_domain_validation_method['dns-someprovider'] = [
+ 	'name' => 'Some Provider',
+ 	'fields' => [
+ 		'Provider_Value' => [
+ 			'name' => 'provider_value',
+ 			'description' => 'Description of this field ' .
+ 					'if the description is long, break it into multiple lines ',
+ 			'columnheader' => 'Value',
+ 			'type' => 'textbox',
+ 			'size' => '50',
+ 		],
+ 		'Provider_Secret' => [
+ 			'name' => 'provider_secret',
+ 			'description' => 'Secret of some sort',

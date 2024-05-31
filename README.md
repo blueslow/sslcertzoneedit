@@ -68,15 +68,23 @@ The option b creates a backup file (acme.inc.orig) of acme.inc before patch is a
 
 or edit the /usr/local/pkg/acme/acme.inc with (if patching fails):
 ```
-$acme_domain_validation_method['dns_zoneedit'] = array('name' => "DNS-Zoneedit",
-        'fields' => array(
-                'ZONEEDIT_ID' => array('name' => "zoneedit_id", 'columnheader' => "ID", 'type' => "textbox",
-                        'description' => "ZONEEDIT ID"
-                ),
-                'ZONEEDIT_Token' => array('name' => "zoneedit_token", 'columnheader' => "Token", 'type' => "textbox",
-                        'description' => "ZONEEDIT Token"
-                        )
-        ));
+$acme_domain_validation_method['dns_zoneedit'] = [
+	'name' => 'DNS-Zoneedit',
+	'fields' => [
+		'ZONEEDIT_ID' => [
+			'name' => 'zoneedit_id',
+			'description' => 'ZONEEDIT ID',
+			'columnheader' => 'ID',
+			'type' => 'textbox',
+		],
+		'ZONEEDIT_Token' => [
+			'name' => 'zoneedit_token',
+			'description' => 'ZONEEDIT Token',
+			'columnheader' => 'Token',
+			'type' => 'textbox',
+		],
+	]
+];
 ```
 just before //TODO add more challenge validation types
 
@@ -97,6 +105,8 @@ In pfsense when acme pakage is updated acme.inc is overwritten, thus it has to b
   - Merged 23-01-02
 * README.md added note on changing CA.
   - 23-10-10
+* acme.inc have changed format, consequently patch et.c. are updated
+  - 24-05-31.
 
 ## Aknowledgements
 * Thanks to onley for dns_zoneedit_rm
