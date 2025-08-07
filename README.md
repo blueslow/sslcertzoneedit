@@ -93,8 +93,16 @@ just before //TODO add more challenge validation types
 ### Pfsense usage:
 Use the pfsense webgui for acme certificates select method DNS-Zoneedit. Enter ID and token.
 
+## OPNsense installation
+Clone the repository to the machine, then run the install script.
+```sh
+cd /usr/src/
+git clone https://github.com/blueslow/sslcertzoneedit.git
+. /usr/src/sslcertzoneedit/apply.sh
+```
+
 ## Limitations
-In pfsense when acme pakage is updated acme.inc is overwritten, thus it has to be updated with acme_domain_validation_method for dns_zoneedit again. 
+In pfsense when acme package is updated acme.inc is overwritten, thus it has to be updated with acme_domain_validation_method for dns_zoneedit again. 
 
 ## Improvements
 * Replace the usage of the get method to post inorder to get better protection of id and token.
@@ -107,11 +115,14 @@ In pfsense when acme pakage is updated acme.inc is overwritten, thus it has to b
   - 23-10-10
 * acme.inc have changed format, consequently patch et.c. are updated
   - 24-05-31.
+* Added Support for OPNsense
+  - Pull requst merged 25-08-25 (untested)
 
 ## Aknowledgements
 * Thanks to onley for dns_zoneedit_rm
 * Thanks to sbn-purchark for mayor improvement of the script.
 * Thanks to denix0 for context to acme_zoneedit_inc.patch to avoid recurring failing patches when source was changed. 
+* Thanks to EmperorArthur for OPNsense implementation.
 
 ## Known issues
 * It has been reported that dns_zoneedit_rm reports in false positives in some cases.

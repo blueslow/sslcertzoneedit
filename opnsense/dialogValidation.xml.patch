@@ -1,0 +1,22 @@
+--- /usr/local/opnsense/mvc/app/controllers/OPNsense/AcmeClient/forms/dialogValidation.xml	2025-01-14 08:22:31.000000000 -0500
++++ /usr/local/opnsense/mvc/app/controllers/OPNsense/AcmeClient/forms/dialogValidation.xml	2025-05-25 14:20:41.092781000 -0400
+@@ -1924,4 +1924,19 @@
+         <label>Token</label>
+         <type>password</type>
+     </field>
++    <field>
++        <label>Zoneedit.com</label>
++        <type>header</type>
++        <style>table_dns table_dns_zoneedit</style>
++    </field>
++    <field>
++        <id>validation.dns_zoneedit_id</id>
++        <label>ID</label>
++        <type>text</type>
++    </field>
++    <field>
++        <id>validation.dns_zoneedit_token</id>
++        <label>Token</label>
++        <type>text</type>
++    </field>
+ </form>
